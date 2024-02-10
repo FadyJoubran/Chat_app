@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Write Something</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Write Something</h1>
+        <textarea id="inputText" placeholder="Write something..."></textarea>
+        <button onclick="saveText()">Save</button>
+        <button onclick="deleteAll()">Delete All (Admin Only)</button>
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        function saveText() {
+            var text = document.getElementById("inputText").value;
+
+            fetch("/save", {
+                method: "POST",
+                body: JSON.stringify({ text: text }),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        }
+
+        function getMessages() {
+            fetch("/get_messages")
+            .then(response => response.json())
+            .then(messages => {
+                document.getElementById("messages").innerHTML = "";
+                messages.forEach(message => {
+                    document.getElementById("messages").innerHTML += `<p>${message[0]}</p>`;
+                });
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        }
+
+        function deleteAll() {
+            if (confirm("Are you sure you want to delete all records?")) {
+                fetch("/delete_all", {
+                    method: "POST"
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    console.log(data);
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+            }
+        }
+
+        // Fetch messages every 3 seconds
+        setInterval(getMessages, 3000);
+
+        // Fetch messages when the page loads
+        window.onload = getMessages;
+    </script>
+</body>
+</html>
